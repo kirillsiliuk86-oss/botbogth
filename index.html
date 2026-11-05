@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bandit World</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { 
+            --bg: #121417; --card: #1e2126; --primary: #10b981; 
+            --text: #f3f4f6; --muted: #9ca3af; --border: #2d3139;
+            --gold: #fbbf24; --diamond: #38bdf8; --bronze: #d97706;
+        }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
+        
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; margin-top: 10px;}
+        .avatar { width: 70px; height: 70px; border-radius: 20px; background: var(--card); object-fit: cover; border: 2px solid var(--border); }
+        .name { font-size: 22px; font-weight: 700; }
+        .badges { display: flex; gap: 5px; margin-top: 6px; }
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+        .badge-city { background: rgba(16, 185, 129, 0.15); color: var(--primary); }
+        .badge-status { background: rgba(251, 191, 36, 0.15); color: var(--gold); border: 1px solid var(--gold); }
+
+        .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .balance-label { color: var(--muted); font-size: 13px; text-align: center; text-transform: uppercase; letter-spacing: 1px;}
+        .balance { font-size: 36px; font-weight: 800; text-align: center; color: var(--primary); margin-top: 5px;}
+
+        .btn { background: var(--primary); color: #fff; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+        .btn:active { background: #0d9668; }
+
+        /* Магазин сетов */
+        .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .shop-item { background: #262a31; padding: 20px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
+        .shop-item-left { display: flex; flex-direction: column; gap: 5px; }
+        .set-name { font-weight: 700; font-size: 18px; }
+        .set-desc { color: var(--muted); font-size: 13px; }
+        .buy-btn { background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+        /* Нижнее меню */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(30, 33, 38, 0.95); backdrop-filter: blur(12px); display: flex; justify-content: space-around; padding: 12px 0 25px 0; border-top: 1px solid var(--border); z-index: 100; }
+        .nav-item { text-align: center; color: var(--muted); font-size: 11px; font-weight: 500; cursor: pointer; transition: 0.2s; width: 33%; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item svg { width: 24px; height: 24px; fill: currentColor; display: block; margin: 0 auto 5px; }
+    </style>
+</head>
+<body>
+    <!-- ГЛАВНАЯ -->
+    <div id="screen-home" class="screen active">
+        <div class="header">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="avatar" id="avatar-img">
+            <div>
+                <div class="name" id="user-name">Загрузка...</div>
+                <div class="badges">
+                    <div class="badge badge-city" id="user-city">Москва</div>
+                    <div class="badge badge-status" id="user-status">Бомж</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="balance-label">Твой баланс</div>
+            <div class="balance" id="user-balance">0 $</div>
+        </div>
+    </div>
+
+    <!-- ДОНАТ / МАГАЗИН СТАТУСОВ -->
+    <div id="screen-shop" class="screen">
+        <h2 style="margin-top: 10px;">Статусы (Донат)</h2>
+        <p style="color:var(--muted); font-size: 14px; margin-bottom: 20px;">Покупай образы и получай бонусы к доходу.</p>
+        
+        <div class="grid">
+            <!-- Пацанчик -->
+            <div class="shop-item">
+                <div class="shop-item-left">
+                    <div class="set-name" style="color: #d97706;">🧢 Пацанчик</div>
+                    <div class="set-desc">+10% к деньгам с работы</div>
+                </div>
+                <button class="buy-btn" onclick="buySet('Пацанчик')">Купить</button>
+            </div>
+            
+            <!-- Бизнесмен -->
+            <div class="shop-item">
+                <div class="shop-item-left">
+                    <div class="set-name" style="color: #fbbf24;">💼 Бизнесмен</div>
+                    <div class="set-desc">+30% к деньгам, стильный вид</div>
+                </div>
+                <button class="buy-btn" onclick="buySet('Бизнесмен')">Купить</button>
+            </div>
+
+            <!-- Мафиози -->
+            <div class="shop-item">
+                <div class="shop-item-left">
+                    <div class="set-name" style="color: #38bdf8;">🕶 Мафиози</div>
+                    <div class="set-desc">+50% к деньгам, +50 энергии</div>
+                </div>
+                <button class="buy-btn" onclick="buySet('Мафиози')">Купить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- НИЖНЕЕ МЕНЮ -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('home', this)">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            Главная
+        </div>
+        <div class="nav-item" onclick="switchTab('shop', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 12l10 10 10-10L12 2zm0 18l-8-8 8-8 8 8-8 8z"/></svg>
+            Магазин
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        let userId = tg.initDataUnsafe?.user?.id;
+        let userData = {};
+
+        async function loadProfile() {
+            if (!userId) return;
+            let res = await fetch(`/api/profile/${userId}`);
+            userData = await res.json();
+            
+            document.getElementById('user-name').innerText = userData.nickname;
+            document.getElementById('user-balance').innerText = userData.balance.toLocaleString() + " $";
+            document.getElementById('user-city').innerText = userData.city;
+            document.getElementById('user-status').innerText = userData.status;
+            
+            // Меняем аватарку в зависимости от статуса
+            if (userData.status === 'Мафиози') {
+                document.getElementById('avatar-img').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Mafia&top=hat&clothing=blazerAndShirt&accessories=sunglasses";
+            } else if (userData.status === 'Бизнесмен') {
+                document.getElementById('avatar-img').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Boss&top=hat&clothing=blazerAndShirt";
+            } else if (userData.status === 'Пацанчик') {
+                document.getElementById('avatar-img').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Gopnik&top=shortHair&clothing=hoodie";
+            } else {
+                document.getElementById('avatar-img').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix";
+            }
+        }
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + tabId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        async function buySet(setName) {
+            let res = await fetch(`/api/buy_set/${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ set_name: setName })
+            });
+            let data = await res.json();
+            
+            if (data.error) {
+                tg.showAlert(data.error);
+            } else {
+                tg.showAlert(`Вы успешно купили статус: ${setName}!`);
+                loadProfile();
+            }
+        }
+
+        if (userId) loadProfile();
+    </script>
+</body>
+</html>
