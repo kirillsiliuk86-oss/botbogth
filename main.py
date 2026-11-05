@@ -23,7 +23,7 @@ templates = Jinja2Templates(directory=".")
 async def start(message: Message):
     # Кнопка, которая открывает Mini App (сайт)
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 Играть", web_app=WebAppInfo(url="https://ТВОЙ_ДОМЕН_RAILWAY.up.railway.app"))]
+        [InlineKeyboardButton(text="🚀 Играть", web_app=WebAppInfo(url="captivating-motivation-production-ee2d.up.railway.app"))]
     ])
     await message.answer("Добро пожаловать в BANDIT WEB APP! Нажми кнопку ниже, чтобы открыть игру:", reply_markup=kb)
 
