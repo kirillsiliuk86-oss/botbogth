@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os  # <--- ОБЯЗАТЕЛЬНО ДОБАВИТЬ ЭТУ СТРОКУ
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -37,12 +38,16 @@ async def start_bot():
     await dp.start_polling(bot)
 
 async def start_web():
-    config = uvicorn.Config(app, host="0.0.0.0", port=8080)
+    config = uvicorn.Config(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
     server = uvicorn.Server(config)
     await server.serve()
 
 async def main():
-    await asyncio.gather(start_bot(), start_web())
+    # Запускаем бота и сайт параллельно с помощью asyncio.create_task
+    # Это предотвращает конфликты
+    asyncio.create_task(start_web())
+    await start_bot() # Бот блокирует основной поток
 
 if __name__ == "__main__":
     asyncio.run(main())
+
