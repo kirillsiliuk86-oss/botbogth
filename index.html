@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bandit World</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --bg: #121417; --card: #1e2126; --primary: #10b981; --text: #f3f4f6; --muted: #9ca3af; --border: #2d3139; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 15px; padding-bottom: 80px; }
+        .screen { display: none; } .screen.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .avatar { width: 60px; height: 60px; border-radius: 15px; background: var(--card); border: 2px solid var(--border); }
+        .balance-card { background: var(--card); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid var(--border); margin-bottom: 15px;}
+        .balance { font-size: 36px; color: var(--primary); font-weight: bold; }
+        .btn { background: var(--primary); color: white; padding: 10px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer;}
+        .item-card { background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .progress-bar-container { background: #333; height: 15px; border-radius: 10px; margin-top: 10px; display: none; overflow: hidden;}
+        .progress-bar { background: var(--primary); height: 100%; width: 0%; transition: width 0.1s; }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); }
+        .nav-item { color: var(--muted); font-size: 12px; cursor: pointer; }
+        .nav-item.active { color: var(--primary); font-weight: bold; }
+    </style>
+</head>
+<body>
+    <!-- ГЛАВНАЯ -->
+    <div id="screen-home" class="screen active">
+        <div class="header">
+            <img src="" class="avatar" id="u-avatar">
+            <div>
+                <h2 id="u-name" style="margin:0;">...</h2>
+                <div id="u-status" style="color:var(--primary); font-size:14px;">...</div>
+            </div>
+        </div>
+        <div class="balance-card">
+            <div style="color:var(--muted); font-size:14px;">Баланс</div>
+            <div class="balance" id="u-balance">0 $</div>
+        </div>
+        <div class="balance-card" style="padding: 10px;">
+            <div style="font-size:14px;">Бизнес: <span id="u-biz" style="color:var(--primary); font-weight:bold;">Нет</span></div>
+        </div>
+    </div>
+
+    <!-- РАБОТЫ -->
+    <div id="screen-jobs" class="screen">
+        <h2>Работы</h2>
+        <div id="jobs-list"></div>
+    </div>
+
+    <!-- БИЗНЕСЫ -->
+    <div id="screen-biz" class="screen">
+        <h2>Бизнесы</h2>
+        <div id="biz-list"></div>
+    </div>
+
+    <!-- ДОНАТ -->
+    <div id="screen-shop" class="screen">
+        <h2>Донат Статусы</h2>
+        <div class="item-card" onclick="buySet('Пацанчик')"><div>🧢 Пацанчик (+10%)</div><button class="btn">Купить</button></div>
+        <div class="item-card" onclick="buySet('Бизнесмен')"><div>💼 Бизнесмен (+30%)</div><button class="btn">Купить</button></div>
+        <div class="item-card" onclick="buySet('Мафиози')"><div>🕶 Мафиози (+50%)</div><button class="btn">Купить</button></div>
+    </div>
+
+    <!-- ЭКРАН РАБОТЫ -->
+    <div id="screen-progress" class="screen">
+        <div class="balance-card" style="padding-top:40px; padding-bottom:40px;">
+            <h2 id="p-title">Работа...</h2>
+            <div style="font-size:50px; margin:20px 0;" id="p-icon">⛏️</div>
+            <div class="progress-bar-container" id="p-container"><div class="progress-bar" id="p-bar"></div></div>
+            <div id="p-timer" style="margin-top:10px; font-weight:bold;"></div>
+        </div>
+    </div>
+
+    <!-- НАВИГАЦИЯ -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('home', this)">Главная</div>
+        <div class="nav-item" onclick="switchTab('jobs', this)">Работы</div>
+        <div class="nav-item" onclick="switchTab('biz', this)">Бизнесы</div>
+        <div class="nav-item" onclick="switchTab('shop', this)">Донат</div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp; tg.expand();
+        let userId = tg.initDataUnsafe?.user?.id;
+        let isWorking = false;
+
+        async function load() {
+            let r = await fetch(`/api/profile/${userId}`);
+            let d = await r.json();
+            document.getElementById('u-name').innerText = d.nickname;
+            document.getElementById('u-avatar').src = d.avatar;
+            document.getElementById('u-balance').innerText = d.balance.toLocaleString() + " $";
+            document.getElementById('u-status').innerText = d.status;
+            document.getElementById('u-biz').innerText = d.business;
+        }
+
+        async function loadJobs() {
+            let r = await fetch(`/api/jobs`);
+            let jobs = await r.json();
+            let html = '';
+            for (let [name, info] of Object.entries(jobs)) {
+                html += `<div class="item-card">
+                    <div><b>${name}</b><br><span style="font-size:12px;color:var(--muted)">+${info.pay}$ (${info.time}с)</span></div>
+                    <button class="btn" onclick="startWork('${name}',${info.time},${info.pay})">Начать</button>
+                </div>`;
+            }
+            document.getElementById('jobs-list').innerHTML = html;
+        }
+
+        async function loadBiz() {
+            let r = await fetch(`/api/biz`);
+            let biz = await r.json();
+            let html = '';
+            for (let [name, info] of Object.entries(biz)) {
+                html += `<div class="item-card">
+                    <div><b>${name}</b><br><span style="font-size:12px;color:var(--muted)">Доход: +${info.income}$/мин</span></div>
+                    <div style="text-align:right;">
+                        <div style="color:var(--primary);font-weight:bold;">${info.price}$</div>
+                        <button class="btn" onclick="buyBiz('${name}')">Купить</button>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('biz-list').innerHTML = html;
+        }
+
+        function switchTab(id, el) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-'+id).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function startWork(job, time, pay) {
+            if(isWorking) return tg.showAlert("Уже работаешь!");
+            isWorking = true;
+            switchTab('progress', document.querySelector('.nav-item'));
+            document.getElementById('p-title').innerText = job;
+            document.getElementById('p-container').style.display = 'block';
+            document.getElementById('p-bar').style.width = '0%';
+            
+            let t = time;
+            let int = setInterval(() => {
+                t -= 1;
+                document.getElementById('p-bar').style.width = ((time - t) / time) * 100 + '%';
+                document.getElementById('p-timer').innerText = `Осталось: ${t}с`;
+                if(t <= 0) { clearInterval(int); finishWork(job, pay); }
+            }, 1000);
+        }
+
+        async function finishWork(job, pay) {
+            let r = await fetch(`/api/work/${userId}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({job: job}) });
+            let d = await r.json();
+            isWorking = false;
+            if(d.error) tg.showAlert(d.error); else { tg.showAlert(`✅ Заработано ${d.earned}$!`); load(); }
+            switchTab('home', document.querySelector('.nav-item'));
+        }
+
+        async function buyBiz(name) {
+            let r = await fetch(`/api/buy_biz/${userId}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({biz_name: name}) });
+            let d = await r.json();
+            if(d.error) tg.showAlert(d.error); else { tg.showAlert(`Куплен бизнес: ${name}!`); load(); }
+        }
+
+        async function buySet(name) {
+            await fetch(`/api/buy_set/${userId}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({set_name: name}) });
+            tg.showAlert(`Куплен статус: ${name}!`);
+            load();
+        }
+
+        if(userId) { load(); loadJobs(); loadBiz(); }
+    </script>
+</body>
+</html>
