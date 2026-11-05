@@ -1,7 +1,7 @@
 import os
 
 # ================= НАСТРОЙКИ =================
-BOT_TOKEN = "8996438777:AAFSiI1XaFY5cEa9d9Lr0fb0m0MtRrBq2SA" # <--- НЕ ЗАБУДЬ ВСТАВИТЬ ТОКЕН!
+BOT_TOKEN = "8849457070:AAHfu38xNcnfFsPdqVqE-rMZAW2qLxtmDqg" # <--- НЕ ЗАБУДЬ ВСТАВИТЬ ТОКЕН!
 ADMIN_ID = 123456789            # <--- ТВОЙ ID (узнать в @userinfobot)
 # ============================================
 
