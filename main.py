@@ -16,7 +16,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 import uvicorn
 
 # ================= НАСТРОЙКИ =================
-BOT_TOKEN = "ТВОЙ_ТОКЕН_ЗДЕСЬ" # <--- ВСТАВЬ ТОКЕН
+BOT_TOKEN = "8849457070:AAHfu38xNcnfFsPdqVqE-rMZAW2qLxtmDqg" # <--- ВСТАВЬ ТОКЕН
 # ============================================
 
 logging.basicConfig(level=logging.INFO)
