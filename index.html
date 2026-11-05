@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bandit Web App</title>
+    <!-- Официальный скрипт Telegram Mini Apps -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --primary: #ff5722;
+            --text: #ffffff;
+            --text-muted: #888888;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            padding-bottom: 80px; /* Место для нижнего меню */
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .balance-card {
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .balance-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .card {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .card:active {
+            transform: scale(0.95);
+        }
+        .card-icon {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+        .card-title {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        /* Нижнее меню навигации */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--card-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            border-top: 1px solid #333;
+            z-index: 100;
+        }
+        .nav-item {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        .nav-item.active {
+            color: var(--primary);
+        }
+        .nav-icon {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Шапка с профилем -->
+    <div class="header">
+        <div class="user-info">
+            <div class="avatar" id="user-avatar">?</div>
+            <div>
+                <div style="font-weight: bold;" id="user-name">Загрузка...</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Уровень 1</div>
+            </div>
+        </div>
+        <div style="font-size: 24px;">⚙️</div>
+    </div>
+
+    <!-- Карточка баланса -->
+    <div class="balance-card">
+        <div style="color: var(--text-muted); font-size: 14px;">Твой баланс</div>
+        <div class="balance-amount" id="balance">1 000 $</div>
+        <div style="font-size: 12px; color: var(--text-muted);">💎 0 Кристаллов</div>
+    </div>
+
+    <!-- Сетка кнопок (Игровые модули) -->
+    <div class="grid">
+        <div class="card" onclick="alert('Раздел в разработке!')">
+            <div class="card-icon">💼</div>
+            <div class="card-title">Работать</div>
+        </div>
+        <div class="card" onclick="alert('Раздел в разработке!')">
+            <div class="card-icon">🎰</div>
+            <div class="card-title">Казино</div>
+        </div>
+        <div class="card" onclick="alert('Раздел в разработке!')">
+            <div class="card-icon">⚔️</div>
+            <div class="card-title">Схватки</div>
+        </div>
+        <div class="card" onclick="alert('Раздел в разработке!')">
+            <div class="card-icon">🛒</div>
+            <div class="card-title">Магазин</div>
+        </div>
+    </div>
+
+    <!-- Нижнее меню -->
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <span class="nav-icon">🏠</span>
+            Главная
+        </div>
+        <div class="nav-item">
+            <span class="nav-icon">🏆</span>
+            Топ
+        </div>
+        <div class="nav-item">
+            <span class="nav-icon">👤</span>
+            Профиль
+        </div>
+    </div>
+
+    <!-- Скрипт для работы с Telegram API -->
+    <script>
+        // Инициализация Telegram Web App
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачиваем на весь экран
+
+        // Получаем данные пользователя из Telegram
+        let user = tg.initDataUnsafe?.user;
+        if (user) {
+            document.getElementById('user-name').innerText = user.first_name;
+            document.getElementById('user-avatar').innerText = user.first_name[0];
+        } else {
+            // Если открыто не в Telegram (для теста в браузере)
+            document.getElementById('user-name').innerText = "Тестовый Игрок";
+            document.getElementById('user-avatar').innerText = "T";
+        }
+
+        // Тут будет запрос к серверу за балансом
+        // fetch('/api/get_balance')...
+    </script>
+</body>
+</html>
